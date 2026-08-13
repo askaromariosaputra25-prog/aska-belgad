@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rasuk Bot Telegram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            background: #0a0a12;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 18, 0.96);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .login-box {
+            background: #1a1a2e;
+            border-radius: 24px;
+            padding: 35px;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid #2a2a4a;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+            text-align: center;
+        }
+        .login-box h2 {
+            color: #fff;
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+        .login-box .sub {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .login-box .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .login-box .form-group label {
+            color: #ccc;
+            font-size: 12px;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .login-box .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #2a2a4a;
+            background: #0a0a12;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+        .login-box .form-group input:focus {
+            border-color: #6c5ce7;
+        }
+        .login-box .btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            color: #fff;
+            background: #6c5ce7;
+            margin-top: 6px;
+        }
+        .login-box .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108,92,231,0.4);
+        }
+        .login-box .login-error {
+            color: #ff6b6b;
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+        .login-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            overflow: hidden;
+            border: 3px solid #4a4a8a;
+            background: #0a0a12;
+        }
+        .login-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .login-box .contact-info {
+            margin-top: 15px;
+            color: #888;
+            font-size: 13px;
+        }
+        .login-box .contact-info a {
+            color: #6c5ce7;
+            text-decoration: none;
+        }
+        .btn-telegram { background: #0088cc !important; }
+        .btn-whatsapp { background: #25d366 !important; }
+        .btn-sm {
+            padding: 8px 12px !important;
+            font-size: 12px !important;
+            margin-top: 4px !important;
+            width: auto !important;
+        }
+
+        .container {
+            background: #1a1a2e;
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 550px;
+            width: 100%;
+            border: 1px solid #2a2a4a;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+        h1 {
+            color: #fff;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .sub {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .bot-card {
+            background: #12121f;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid #2a2a4a;
+        }
+        .bot-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            background: #2a2a4a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            overflow: hidden;
+            border: 3px solid #4a4a8a;
+        }
+        .bot-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .bot-name {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .bot-username {
+            color: #888;
+            font-size: 13px;
+        }
+        .bot-bio {
+            color: #aaa;
+            font-size: 12px;
+            margin-top: 8px;
+            background: #0a0a12;
+            padding: 8px 10px;
+            border-radius: 8px;
+        }
+        .bot-shortbio {
+            color: #aaa;
+            font-size: 12px;
+            margin-top: 4px;
+            background: #12121f;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border-left: 3px solid #6c5ce7;
+        }
+        .panel-image {
+            text-align: center;
+            margin: 10px 0 15px 0;
+        }
+        .panel-image img {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 14px;
+            border: 2px solid #2a2a4a;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            color: #ccc;
+            font-size: 12px;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #2a2a4a;
+            background: #0a0a12;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #6c5ce7;
+        }
+        .btn {
+            width: 100%;
+            padding: 11px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            color: #fff;
+            background: #6c5ce7;
+            margin-top: 4px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(108,92,231,0.3);
+        }
+        .btn-success { background: #00b894; }
+        .btn-danger { background: #e17055; }
+        .btn-outline { background: transparent; border: 2px solid #6c5ce7; }
+        .btn-warning { background: #fdcb6e; color: #000; }
+        .btn-warning:hover { box-shadow: 0 8px 20px rgba(253,203,110,0.4); }
+        .row {
+            display: flex;
+            gap: 8px;
+        }
+        .row .btn { flex: 1; }
+        .status {
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            display: none;
+            font-weight: 500;
+            word-break: break-word;
+        }
+        .status.success {
+            display: block;
+            background: #00b89433;
+            border: 1px solid #00b894;
+            color: #55efc4;
+        }
+        .status.error {
+            display: block;
+            background: #e1705533;
+            border: 1px solid #e17055;
+            color: #fab1a0;
+        }
+        .status.loading {
+            display: block;
+            background: #6c5ce733;
+            border: 1px solid #6c5ce7;
+            color: #a29bfe;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid #2a2a4a;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            color: #555;
+            font-size: 11px;
+            margin-top: 15px;
+        }
+        .audio-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #6c5ce7;
+            border: none;
+            color: #fff;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(108,92,231,0.4);
+            transition: 0.3s;
+            display: none;
+        }
+        .audio-toggle:hover { transform: scale(1.1); }
+        .audio-toggle.playing { background: #e17055; }
+        @media (max-width: 480px) {
+            .container { padding: 20px; }
+            .row { flex-direction: column; }
+            .login-box { padding: 25px; }
+            .login-avatar { width: 80px; height: 80px; }
+            .panel-image img { max-height: 120px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========== AUDIO TOGGLE ========== -->
+    <button class="audio-toggle" id="audioToggle" onclick="toggleAudio()">🔊</button>
+
+    <!-- ========== LOGIN OVERLAY ========== -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <div class="login-avatar">
+                <img id="loginAvatarImg" src="https://files.catbox.moe/ys2phk.jpg" alt="Avatar">
+            </div>
+            <h2>RASUK BOT</h2>
+            <p class="sub">Masuk untuk mengakses panel</p>
+
+            <div class="form-group">
+                <label>👤 Username</label>
+                <input type="text" id="loginUsername" placeholder="Masukkan username...">
+            </div>
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="loginPassword" placeholder="Masukkan password...">
+            </div>
+
+            <button class="btn" onclick="login()">🚀 Login</button>
+            <div class="login-error" id="loginError">❌ Username atau Password salah!</div>
+
+            <div class="contact-info">
+                <p style="margin-top:10px;">Belum punya akun? Hubungi owner:</p>
+                <a href="https://t.me/Askagg_47" target="_blank">
+                    <button class="btn btn-telegram btn-sm">📱 Telegram: @Askagg_47</button>
+                </a>
+                <a href="https://wa.me/6285797100488" target="_blank">
+                    <button class="btn btn-whatsapp btn-sm">💬 WhatsApp: 6285797100488</button>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MAIN PANEL ========== -->
+    <div class="container" id="mainPanel" style="display:none;">
+        <h1>RASUK BOT TELE</h1>
+        <p class="sub">GUNAKAN DENGAN BIJAK!!</p>
+
+        <!-- BOT CARD -->
+        <div class="bot-card" id="botCard">
+            <div class="bot-avatar" id="avatarContainer">
+                <img id="avatarImg" src="https://files.catbox.moe/ys2phk.jpg" alt="avatar" style="width:100%;height:100%;object-fit:cover;">
+            </div>
+            <div class="bot-name" id="displayName">-</div>
+            <div class="bot-username" id="displayUsername">-</div>
+            <div class="bot-bio" id="displayBio">-</div>
+            <div class="bot-shortbio" id="displayShortBio">-</div>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <!-- TOKEN -->
+        <div class="form-group">
+            <label>🔑 Bot Token</label>
+            <input type="password" id="botToken" placeholder="Masukkan token..." value="8280502690:AAECUtizvQncEaDXCp3XaEfDjT3TzDqFdoM">
+            <button class="btn btn-outline" onclick="getBotInfo()" style="margin-top:4px;">🔍 Cek Token</button>
+        </div>
+
+        <hr class="divider">
+
+        <!-- FOTO TENGAH PANEL -->
+        <div class="panel-image">
+            <img id="panelImage" src="https://files.catbox.moe/ys2phk.jpg" alt="Panel Image">
+        </div>
+
+        <hr class="divider">
+
+        <!-- UPDATE NAMA -->
+        <div class="form-group">
+            <label>📝 Ganti Nama Bot</label>
+            <input type="text" id="newName" placeholder="Nama baru...">
+            <button class="btn" onclick="updateName()">Update Nama</button>
+        </div>
+
+        <!-- UPDATE BIO (DESKRIPSI) -->
+        <div class="form-group">
+            <label>📝 Ganti Bio (Deskripsi)</label>
+            <textarea id="newBio" placeholder="Bio baru..." rows="2"></textarea>
+            <button class="btn" onclick="updateBio()">Update Bio</button>
+        </div>
+
+        <!-- UPDATE SHORT BIO (ABOUT / BIO PROFIL) -->
+        <div class="form-group">
+            <label>📝 Ganti Short Bio (About / Bio Profil)</label>
+            <input type="text" id="newShortBio" placeholder="Short bio baru...">
+            <button class="btn btn-success" onclick="updateShortBio()">Update Short Bio</button>
+        </div>
+
+        <hr class="divider">
+
+        <!-- SPAM START -->
+        <div class="form-group">
+            <button class="btn btn-warning" onclick="spamStart()">🔥 SPAM START 1×</button>
+        </div>
+
+        <!-- BROADCAST -->
+        <div class="form-group">
+            <label>📢 Broadcast Pesan</label>
+            <textarea id="broadcastMsg" placeholder="Pesan broadcast..." rows="2"></textarea>
+            <button class="btn btn-success" onclick="broadcast()">Kirim Broadcast</button>
+        </div>
+
+        <hr class="divider">
+
+        <!-- CONTACT OWNER -->
+        <div class="form-group">
+            <label>📞 Contact Owner</label>
+            <div class="row">
+                <a href="https://t.me/Askagg_47" target="_blank" style="flex:1;">
+                    <button class="btn btn-telegram">📱 Telegram</button>
+                </a>
+                <a href="https://wa.me/6285797100488" target="_blank" style="flex:1;">
+                    <button class="btn btn-whatsapp">💬 WhatsApp</button>
+                </a>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="row">
+            <button class="btn btn-outline" onclick="getBotInfo()">🔄 Refresh</button>
+            <button class="btn btn-danger" onclick="clearStatus()">🗑️ Clear</button>
+            <button class="btn btn-danger" onclick="logout()">🚪 Logout</button>
+        </div>
+
+        <div class="footer">Made with ❤️ Askaa</div>
+    </div>
+
+    <!-- ========== AUDIO ========== -->
+    <audio id="bgAudio" loop>
+        <source id="bgAudioSource" src="https://files.catbox.moe/ruix4s.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // ========== KONFIGURASI ==========
+        const VALID_USERNAME = 'AskaaCyber';
+        const VALID_PASSWORD = 'Askagg_47';
+
+        // ========== AUDIO ==========
+        let audioPlaying = false;
+        const bgAudio = document.getElementById('bgAudio');
+        const audioToggle = document.getElementById('audioToggle');
+
+        // ========== STATUS ==========
+        const statusEl = document.getElementById('status');
+
+        function showStatus(msg, type = 'loading') {
+            statusEl.className = 'status ' + type;
+            statusEl.textContent = msg;
+            statusEl.style.display = 'block';
+            if (type !== 'loading') {
+                setTimeout(() => { statusEl.style.display = 'none'; }, 10000);
+            }
+        }
+
+        function clearStatus() {
+            statusEl.style.display = 'none';
+            statusEl.className = 'status';
+        }
+
+        // ========== DELAY ==========
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ========== LOGIN ==========
+        function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const errorEl = document.getElementById('loginError');
+
+            if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+                errorEl.style.display = 'none';
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainPanel').style.display = 'block';
+                document.getElementById('audioToggle').style.display = 'flex';
+
+                bgAudio.load();
+                bgAudio.play().then(() => {
+                    audioPlaying = true;
+                    audioToggle.textContent = '🔊';
+                    audioToggle.classList.add('playing');
+                }).catch(() => {
+                    audioPlaying = false;
+                    audioToggle.textContent = '🔇';
+                    audioToggle.classList.remove('playing');
+                });
+
+                getBotInfo();
+            } else {
+                errorEl.style.display = 'block';
+                setTimeout(() => { errorEl.style.display = 'none'; }, 3000);
+            }
+        }
+
+        // ========== TOGGLE AUDIO ==========
+        function toggleAudio() {
+            if (audioPlaying) {
+                bgAudio.pause();
+                audioPlaying = false;
+                audioToggle.textContent = '🔇';
+                audioToggle.classList.remove('playing');
+            } else {
+                bgAudio.play().then(() => {
+                    audioPlaying = true;
+                    audioToggle.textContent = '🔊';
+                    audioToggle.classList.add('playing');
+                }).catch(() => {
+                    bgAudio.load();
+                    bgAudio.play().then(() => {
+                        audioPlaying = true;
+                        audioToggle.textContent = '🔊';
+                        audioToggle.classList.add('playing');
+                    }).catch(() => {});
+                });
+            }
+        }
+
+        // ========== LOGOUT ==========
+        function logout() {
+            document.getElementById('mainPanel').style.display = 'none';
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            bgAudio.pause();
+            audioPlaying = false;
+            document.getElementById('audioToggle').style.display = 'none';
+            clearStatus();
+        }
+
+        // ========== ENTER KEY LOGIN ==========
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const overlay = document.getElementById('loginOverlay');
+                if (overlay.style.display !== 'none') {
+                    login();
+                }
+            }
+        });
+
+        // ========== GET BOT INFO ==========
+        async function getBotInfo() {
+            const token = document.getElementById('botToken').value.trim();
+            if (!token) {
+                showStatus('❌ Masukkan token!', 'error');
+                return;
+            }
+
+            showStatus('⏳ Memuat info bot...', 'loading');
+
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+                const data = await res.json();
+
+                if (!data.ok) {
+                    showStatus('❌ Token tidak valid!', 'error');
+                    document.getElementById('displayName').textContent = '❌ Invalid';
+                    document.getElementById('displayUsername').textContent = '❌ Invalid';
+                    document.getElementById('displayBio').textContent = '❌ Invalid';
+                    document.getElementById('displayShortBio').textContent = '❌ Invalid';
+                    return;
+                }
+
+                const bot = data.result;
+
+                document.getElementById('displayName').textContent = bot.first_name || 'Tidak ada nama';
+                document.getElementById('displayUsername').textContent = bot.username ? '@' + bot.username : 'Tidak ada username';
+                document.getElementById('newName').value = bot.first_name || '';
+
+                // ========== AMBIL BIO (DESKRIPSI) ==========
+                try {
+                    const bioRes = await fetch(`https://api.telegram.org/bot${token}/getMyDescription`);
+                    const bioData = await bioRes.json();
+                    if (bioData.ok) {
+                        const bio = bioData.result.description || 'Tidak ada bio';
+                        document.getElementById('displayBio').textContent = bio;
+                        document.getElementById('newBio').value = bio;
+                    } else {
+                        document.getElementById('displayBio').textContent = 'Tidak ada bio';
+                        document.getElementById('newBio').value = '';
+                    }
+                } catch {
+                    document.getElementById('displayBio').textContent = 'Tidak ada bio';
+                    document.getElementById('newBio').value = '';
+                }
+
+                // ========== AMBIL SHORT BIO (ABOUT / BIO PROFIL) ==========
+                try {
+                    const shortBioRes = await fetch(`https://api.telegram.org/bot${token}/getMyShortDescription`);
+                    const shortBioData = await shortBioRes.json();
+                    if (shortBioData.ok) {
+                        const shortBio = shortBioData.result.short_description || 'Tidak ada short bio';
+                        document.getElementById('displayShortBio').textContent = '📌 ' + shortBio;
+                        document.getElementById('newShortBio').value = shortBio;
+                    } else {
+                        document.getElementById('displayShortBio').textContent = '📌 Tidak ada short bio';
+                        document.getElementById('newShortBio').value = '';
+                    }
+                } catch {
+                    document.getElementById('displayShortBio').textContent = '📌 Tidak ada short bio';
+                    document.getElementById('newShortBio').value = '';
+                }
+
+                showStatus(`✅ Bot: ${bot.first_name} (@${bot.username}) berhasil dimuat!`, 'success');
+
+            } catch (e) {
+                showStatus('❌ Error: ' + e.message, 'error');
+                document.getElementById('displayName').textContent = '⚠️ Error';
+                document.getElementById('displayUsername').textContent = '⚠️ Error';
+            }
+        }
+
+        // ========== UPDATE NAMA ==========
+        async function updateName() {
+            const token = document.getElementById('botToken').value.trim();
+            const name = document.getElementById('newName').value.trim();
+            if (!token) return showStatus('❌ Masukkan token!', 'error');
+            if (!name) return showStatus('❌ Masukkan nama!', 'error');
+
+            showStatus('⏳ Mengupdate nama...', 'loading');
+
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${token}/setMyName`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name })
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    document.getElementById('displayName').textContent = name;
+                    showStatus('✅ Nama berhasil diupdate!', 'success');
+                } else if (data.error_code === 429) {
+                    const match = data.description.match(/retry after (\d+)/);
+                    if (match) {
+                        const wait = parseInt(match[1]);
+                        showStatus(`⏳ Kena limit! Tunggu ${wait} detik...`, 'loading');
+                        await delay(wait * 1000 + 1000);
+                        const retry = await fetch(`https://api.telegram.org/bot${token}/setMyName`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name: name })
+                        });
+                        const retryData = await retry.json();
+                        if (retryData.ok) {
+                            document.getElementById('displayName').textContent = name;
+                            showStatus('✅ Nama berhasil diupdate! (retry)', 'success');
+                        } else {
+                            showStatus('❌ Gagal retry: ' + (retryData.description || JSON.stringify(retryData)), 'error');
+                        }
+                    } else {
+                        showStatus('❌ Kena limit! Coba lagi nanti.', 'error');
+                    }
+                } else {
+                    showStatus('❌ Gagal: ' + (data.description || JSON.stringify(data)), 'error');
+                }
+            } catch (e) {
+                showStatus('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        // ========== UPDATE BIO (DESKRIPSI) ==========
+        async function updateBio() {
+            const token = document.getElementById('botToken').value.trim();
+            const bio = document.getElementById('newBio').value.trim();
+            if (!token) return showStatus('❌ Masukkan token!', 'error');
+
+            showStatus('⏳ Mengupdate bio...', 'loading');
+
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${token}/setMyDescription`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ description: bio })
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    document.getElementById('displayBio').textContent = bio || '-';
+                    showStatus('✅ Bio berhasil diupdate!', 'success');
+                } else if (data.error_code === 429) {
+                    const match = data.description.match(/retry after (\d+)/);
+                    if (match) {
+                        const wait = parseInt(match[1]);
+                        showStatus(`⏳ Kena limit! Tunggu ${wait} detik...`, 'loading');
+                        await delay(wait * 1000 + 1000);
+                        const retry = await fetch(`https://api.telegram.org/bot${token}/setMyDescription`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ description: bio })
+                        });
+                        const retryData = await retry.json();
+                        if (retryData.ok) {
+                            document.getElementById('displayBio').textContent = bio || '-';
+                            showStatus('✅ Bio berhasil diupdate! (retry)', 'success');
+                        } else {
+                            showStatus('❌ Gagal retry: ' + (retryData.description || JSON.stringify(retryData)), 'error');
+                        }
+                    } else {
+                        showStatus('❌ Kena limit! Coba lagi nanti.', 'error');
+                    }
+                } else {
+                    showStatus('❌ Gagal: ' + (data.description || JSON.stringify(data)), 'error');
+                }
+            } catch (e) {
+                showStatus('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        // ========== UPDATE SHORT BIO (ABOUT / BIO PROFIL) ==========
+        async function updateShortBio() {
+            const token = document.getElementById('botToken').value.trim();
+            const shortBio = document.getElementById('newShortBio').value.trim();
+            if (!token) return showStatus('❌ Masukkan token!', 'error');
+
+            showStatus('⏳ Mengupdate short bio...', 'loading');
+
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${token}/setMyShortDescription`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ short_description: shortBio })
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    document.getElementById('displayShortBio').textContent = '📌 ' + (shortBio || 'Tidak ada short bio');
+                    showStatus('✅ Short Bio berhasil diupdate!', 'success');
+                } else if (data.error_code === 429) {
+                    const match = data.description.match(/retry after (\d+)/);
+                    if (match) {
+                        const wait = parseInt(match[1]);
+                        showStatus(`⏳ Kena limit! Tunggu ${wait} detik...`, 'loading');
+                        await delay(wait * 1000 + 1000);
+                        const retry = await fetch(`https://api.telegram.org/bot${token}/setMyShortDescription`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ short_description: shortBio })
+                        });
+                        const retryData = await retry.json();
+                        if (retryData.ok) {
+                            document.getElementById('displayShortBio').textContent = '📌 ' + (shortBio || 'Tidak ada short bio');
+                            showStatus('✅ Short Bio berhasil diupdate! (retry)', 'success');
+                        } else {
+                            showStatus('❌ Gagal retry: ' + (retryData.description || JSON.stringify(retryData)), 'error');
+                        }
+                    } else {
+                        showStatus('❌ Kena limit! Coba lagi nanti.', 'error');
+                    }
+                } else {
+                    showStatus('❌ Gagal: ' + (data.description || JSON.stringify(data)), 'error');
+                }
+            } catch (e) {
+                showStatus('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        // ========== SPAM START 1× ==========
+        async function spamStart() {
+            const token = document.getElementById('botToken').value.trim();
+            if (!token) return showStatus('❌ Masukkan token!', 'error');
+
+            showStatus('⏳ Mengambil daftar chat...', 'loading');
+
+            try {
+                const updatesRes = await fetch(`https://api.telegram.org/bot${token}/getUpdates?allowed_updates=[]`);
+                const updatesData = await updatesRes.json();
+
+                if (!updatesData.ok) {
+                    return showStatus('❌ Gagal ambil daftar chat: ' + updatesData.description, 'error');
+                }
+
+                const chatIds = new Set();
+                if (updatesData.result) {
+                    for (const u of updatesData.result) {
+                        if (u.message?.chat?.id) chatIds.add(u.message.chat.id);
+                    }
+                }
+
+                if (chatIds.size === 0) {
+                    return showStatus('⚠️ Tidak ada chat yang ditemukan!', 'error');
+                }
+
+                showStatus(`⏳ Mengirim spam ke ${chatIds.size} chat...`, 'loading');
+
+                const pesanSpam = `ngapain bang?udh gw rasuk by @Askagg_47 😹😹😹`;
+                let success = 0, failed = 0;
+                let i = 0;
+
+                for (const id of chatIds) {
+                    i++;
+                    try {
+                        const sendRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ chat_id: id, text: pesanSpam, parse_mode: 'HTML' })
+                        });
+                        const sendData = await sendRes.json();
+                        sendData.ok ? success++ : failed++;
+                    } catch { failed++; }
+                    if (i % 5 === 0) await delay(1000);
+                }
+
+                showStatus(`✅ Spam terkirim ke ${success} chat! (${failed} gagal)`, success > 0 ? 'success' : 'error');
+
+            } catch (e) {
+                showStatus('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        // ========== BROADCAST ==========
+        async function broadcast() {
+            const token = document.getElementById('botToken').value.trim();
+            const msg = document.getElementById('broadcastMsg').value.trim();
+            if (!token) return showStatus('❌ Masukkan token!', 'error');
+            if (!msg) return showStatus('❌ Masukkan pesan!', 'error');
+
+            showStatus('⏳ Mengambil daftar chat...', 'loading');
+
+            try {
+                const updatesRes = await fetch(`https://api.telegram.org/bot${token}/getUpdates?allowed_updates=[]`);
+                const updatesData = await updatesRes.json();
+
+                if (!updatesData.ok) {
+                    return showStatus('❌ Gagal ambil daftar chat: ' + updatesData.description, 'error');
+                }
+
+                const chatIds = new Set();
+                if (updatesData.result) {
+                    for (const u of updatesData.result) {
+                        if (u.message?.chat?.id) chatIds.add(u.message.chat.id);
+                    }
+                }
+
+                if (chatIds.size === 0) {
+                    return showStatus('⚠️ Tidak ada chat yang ditemukan!', 'error');
+                }
+
+                showStatus(`⏳ Mengirim broadcast ke ${chatIds.size} chat...`, 'loading');
+
+                let success = 0, failed = 0;
+                let i = 0;
+
+                for (const id of chatIds) {
+                    i++;
+                    try {
+                        const sendRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                chat_id: id,
+                                text: `📢 BROADCAST:\n\n${msg}`,
+                                parse_mode: 'HTML'
+                            })
+                        });
+                        const sendData = await sendRes.json();
+                        sendData.ok ? success++ : failed++;
+                    } catch { failed++; }
+                    if (i % 5 === 0) await delay(1000);
+                }
+
+                showStatus(`✅ Broadcast terkirim ke ${success} chat! (${failed} gagal)`, success > 0 ? 'success' : 'error');
+                document.getElementById('broadcastMsg').value = '';
+
+            } catch (e) {
+                showStatus('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        // ========== LOAD ==========
+        window.onload = function() {
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginAvatarImg').src = 'https://files.catbox.moe/ys2phk.jpg';
+            document.getElementById('panelImage').src = 'https://files.catbox.moe/ys2phk.jpg';
+
+            const token = document.getElementById('botToken').value.trim();
+            if (token) {
+                getBotInfo();
+            }
+        };
+    </script>
+
+</body>
+  </html>
