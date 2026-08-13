@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Rasuk Telegram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            background: #0a0a12;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: #1a1a2e;
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 550px;
+            width: 100%;
+            border: 1px solid #2a2a4a;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+        h1 {
+            color: #fff;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .sub {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .bot-card {
+            background: #12121f;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+            border: 1px solid #2a2a4a;
+        }
+        .bot-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            background: #2a2a4a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            overflow: hidden;
+            border: 3px solid #4a4a8a;
+        }
+        .bot-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .bot-name {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .bot-username {
+            color: #888;
+            font-size: 14px;
+        }
+        .bot-bio {
+            color: #aaa;
+            font-size: 13px;
+            margin-top: 10px;
+            background: #0a0a12;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            color: #ccc;
+            font-size: 13px;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #2a2a4a;
+            background: #0a0a12;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #6c5ce7;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+        }
+        .form-group input[type="file"] {
+            padding: 10px;
+            background: #0a0a12;
+        }
+        .form-group input[type="file"]::-webkit-file-upload-button {
+            background: #6c5ce7;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 12px;
+        }
+        .btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            color: #fff;
+            background: #6c5ce7;
+            margin-top: 6px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.4);
+        }
+        .btn-success {
+            background: #00b894;
+        }
+        .btn-danger {
+            background: #e17055;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #6c5ce7;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+        .row .btn {
+            flex: 1;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 14px;
+            font-size: 14px;
+            display: none;
+            font-weight: 500;
+        }
+        .status.success {
+            display: block;
+            background: #00b89433;
+            border: 1px solid #00b894;
+            color: #55efc4;
+        }
+        .status.error {
+            display: block;
+            background: #e1705533;
+            border: 1px solid #e17055;
+            color: #fab1a0;
+        }
+        .status.loading {
+            display: block;
+            background: #6c5ce733;
+            border: 1px solid #6c5ce7;
+            color: #a29bfe;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid #2a2a4a;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            color: #555;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            .row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>RASUK BOT TELE BY ASKAA</h1>
+        <p class="sub">Sell V1 V2 Free Request Html</p>
+
+        <!-- BOT CARD -->
+        <div class="bot-card" id="botCard">
+            <div class="bot-avatar" id="avatarContainer">
+                <span id="avatarText">🤖</span>
+                <img id="avatarImg" style="display:none;" alt="avatar">
+            </div>
+            <div class="bot-name" id="displayName">Loading...</div>
+            <div class="bot-username" id="displayUsername">@loading</div>
+            <div class="bot-bio" id="displayBio">Memuat data...</div>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <!-- TOKEN -->
+        <div class="form-group">
+            <label>🔑 Bot Token</label>
+            <input type="password" id="botToken" placeholder="Masukkan token..."
+            value="8280502690:AAECUtizvQncEaDXCp3XaEfDjT3TzDqFdoM">
+        </div>
+
+        <hr class="divider">
+
+        <!-- UPDATE NAMA -->
+        <div class="form-group">
+            <label>📝 Ganti Nama Bot</label>
+            <input type="text" id="newName" placeholder="Nama baru...">
+            <button class="btn" onclick="updateName()">Update Nama</button>
+        </div>
+
+        <!-- UPDATE BIO -->
+        <div class="form-group">
+            <label>📝 Ganti Bio (Deskripsi)</label>
+            <textarea id="newBio" placeholder="Bio baru..."></textarea>
+            <button class="btn" onclick="updateBio()">Update Bio</button>
+        </div>
+
+        <hr class="divider">
+
+        <!-- BROADCAST -->
+        <div class="form-group">
+            <label>📢 Broadcast Pesan</label>
+            <textarea id="broadcastMsg" placeholder="Pesan broadcast..."></textarea>
+            <button class="btn btn-success" onclick="broadcast()">Kirim Broadcast</button>
+        </div>
+
+        <hr class="divider">
+
+        <div class="row">
+            <button class="btn btn-outline" onclick="getBotInfo()">🔄 Refresh</button>
+            <button class="btn btn-danger" onclick="clearStatus()">🗑️ Clear</button>
+        </div>
+
+        <div class="footer">Made with ❤️ by Cyber Seven</div>
+    </div>
+
+    <script>
+        // ========== GLOBAL ==========
+        const statusEl = document.getElementById('status');
+
+        function showStatus(msg, type = 'loading') {
+            statusEl.className = 'status ' + type;
+            statusEl.textContent = msg;
+            statusEl.style.display = 'block';
+            if (type !== 'loading') {
+                setTimeout(() => { statusEl.style.display = 'none'; }, 8000);
+            }
+        }
+
+        function clearStatus() {
+            statusEl.style.display = 'none';
+            statusEl.className = 'status';
+        }
+
+        // ========== GET BOT INFO ==========
+        async function getBotInfo() {
+            const token = document.getElementById('botToken').value.trim();
+            if (!token) return showStatus('❌ Masukkan token!', 'error');
+
+            showStatus('⏳ Memuat info bot...', 'loading');
+
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+                const data = await res.json();
+                if (!data.ok) throw new Error('Token tidak valid');
+
+                const bot = data.result;
+                document.getElementById('displayName').textContent = bot.first_name;
+                document.getElementById('displayUsername').textContent = '@' + bot.username;
+                document.getElementById('newName').value = bot.first_name;
+
+                const bioRes = await fetch(`https://api.telegram.org/bot${token}/getMyDescription`);
+                const bioData = await bioRes.json();
+                if (bioData.ok) {
+                    const bio = bioData.result.description || 'Tidak ada bio';
+                    document.getElementById('displayBio').textContent = bio;
+                    document.getElementById('newBio').value = bio;
+                }
+
+                showStatus('✅ Bot info berhasil dimuat!', 'success');
+            } catch (e) {
+                showStatus('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        // ========== UPDATE NAMA ==========
+        async function updateName() {
+            const token = document.getElementById('botToken').value.trim();
+            const name = document.getElementById('newName').value.trim();
+            if (!token) return showStatus('❌ Masukkan token!', 'error');
+            if (!name) return showStatus('❌ Masukkan nama!', 'error');
+
+            showStatus('⏳ Mengupdate nama...', 'loading');
+            try {
+                const res = await fetch(
+                    `https://api.telegram.org/bot${token}/setMyName?name=${encodeURIComponent(name)}`);
+                const data = await res.json();
+                if (data.ok) {
+                    document.getElementById('displayName').textContent = name;
+                    showStatus('✅ Nama berhasil diupdate!', 'success');
+                } else {
+                    showStatus('❌ Gagal: ' + JSON.stringify(data), 'error');
+                }
+            } catch (e) {
+                showStatus('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        // ========== UPDATE BIO ==========
+        async function updateBio() {
+            const token = document.getElementById('botToken').value.trim();
+            const bio = document.getElementById('newBio').value.trim();
+            if (!token) return showStatus('❌ Masukkan token!', 'error');
+
+            showStatus('⏳ Mengupdate bio...', 'loading');
+            try {
+                const res = await fetch(
+                    `https://api.telegram.org/bot${token}/setMyDescription?description=${encodeURIComponent(bio)}`);
+                const data = await res.json();
+                if (data.ok) {
+                    document.getElementById('displayBio').textContent = bio || 'Tidak ada bio';
+                    showStatus('✅ Bio berhasil diupdate!', 'success');
+                } else {
+                    showStatus('❌ Gagal: ' + JSON.stringify(data), 'error');
+                }
+            } catch (e) {
+                showStatus('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        // ========== BROADCAST ==========
+        async function broadcast() {
+            const token = document.getElementById('botToken').value.trim();
+            const msg = document.getElementById('broadcastMsg').value.trim();
+            if (!token) return showStatus('❌ Masukkan token!', 'error');
+            if (!msg) return showStatus('❌ Masukkan pesan!', 'error');
+
+            showStatus('⏳ Mengambil daftar chat...', 'loading');
+
+            try {
+                const updatesRes = await fetch(
+                    `https://api.telegram.org/bot${token}/getUpdates?allowed_updates=[]`);
+                const updatesData = await updatesRes.json();
+
+                if (!updatesData.ok) {
+                    return showStatus('❌ Gagal ambil daftar chat: ' + updatesData.description, 'error');
+                }
+
+                const chatIds = new Set();
+                if (updatesData.result) {
+                    for (const u of updatesData.result) {
+                        if (u.message?.chat?.id) {
+                            chatIds.add(u.message.chat.id);
+                        }
+                    }
+                }
+
+                if (chatIds.size === 0) {
+                    return showStatus('⚠️ Tidak ada chat yang ditemukan!', 'error');
+                }
+
+                showStatus(`⏳ Mengirim broadcast ke ${chatIds.size} chat...`, 'loading');
+
+                let success = 0;
+                let failed = 0;
+
+                for (const id of chatIds) {
+                    try {
+                        const sendRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                chat_id: id,
+                                text: `📢 BROADCAST:\n\n${msg}`,
+                                parse_mode: 'HTML'
+                            })
+                        });
+                        const sendData = await sendRes.json();
+                        if (sendData.ok) {
+                            success++;
+                        } else {
+                            failed++;
+                        }
+                    } catch {
+                        failed++;
+                    }
+                }
+
+                showStatus(`✅ Broadcast terkirim ke ${success} chat! (${failed} gagal)`, success > 0 ? 'success' :
+                    'error');
+                document.getElementById('broadcastMsg').value = '';
+
+            } catch (e) {
+                showStatus('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        // ========== LOAD ==========
+        window.onload = function() {
+            getBotInfo();
+            document.getElementById('botToken').addEventListener('change', getBotInfo);
+        };
+    </script>
+
+</body>
+  </html>
